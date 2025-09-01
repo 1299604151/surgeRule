@@ -1,0 +1,61 @@
+name: Update Surge Rules
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨2点执行
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download and merge rules
+      run: |
+        # 下载远程规则集
+        curl -s "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/reject.txt" > temp_reject.txt
+        curl -s "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/direct.txt" > temp_direct.txt  
+        curl -s "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/proxy.txt" > temp_proxy.txt
+        
+        # 生成主规则文件
+        cat > surge.conf << 'EOF'
+        [General]
+        # Generated at $(date)
+        
+        [Rule]
+        EOF
+        
+        # 添加自定义规则
+        if [ -f "custom-rules.txt" ]; then
+          echo "# 自定义规则" >> surge.conf
+          cat custom-rules.txt >> surge.conf
+          echo "" >> surge.conf
+        fi
+        
+        # 添加下载的规则
+        echo "# 拒绝规则" >> surge.conf
+        cat temp_reject.txt >> surge.conf
+        echo "" >> surge.conf
+        
+        echo "# 直连规则" >> surge.conf  
+        cat temp_direct.txt >> surge.conf
+        echo "" >> surge.conf
+        
+        echo "# 代理规则" >> surge.conf
+        cat temp_proxy.txt >> surge.conf
+        
+        # 清理临时文件
+        rm temp_*.txt
+
+    - name: Commit and push
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add surge.conf
+        git diff --staged --quiet || git commit -m "Update surge rules - $(date)"
+        git push

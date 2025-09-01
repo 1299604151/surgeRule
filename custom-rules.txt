@@ -1,0 +1,11 @@
+# 自定义拒绝规则
+DOMAIN-SUFFIX,doubleclick.net
+DOMAIN-SUFFIX,googletagmanager.com
+
+# 自定义直连规则
+DOMAIN-SUFFIX,baidu.com
+DOMAIN-SUFFIX,qq.com
+
+# 自定义代理规则
+DOMAIN-SUFFIX,google.com
+DOMAIN-SUFFIX,youtube.com
